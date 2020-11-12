@@ -1,0 +1,37 @@
+# Ansible - Set up a Manual job in Tower
+
+1. Create User
+WebUI
+
+2. Create Inventory
+WebUI
+
+
+3. Create Hosts
+WebUI > Inventory > Hosts
+
+4. Create Credential
+WebUI
+
+5. Create Project
+
+# This is for "Manual" playbook
+5.1 CLI: create a demo playbook here:
+# cat /var/lib/awx/projects/DEMO/hello.yml
+
+---
+- name: Testing Job Templates
+  hosts: all
+  tasks:
+  - name: Template Testing
+    shell: echo "Testing Tower playbook."
+
+5.2 WebUI
+SCM Type = Manual
+Playbook Directory: /var/lib/awx/projects/DEMO
+
+6. Create Job Template
+WebUI > Add > Job Template
+
+7. Launch the Job
+WebUI
