@@ -1,0 +1,42 @@
+/etc/ansible/hosts
+ansible -i <FILENAME>
+In ansible.cfg
+
+INVENTORY file may contain:
+- hosts
+- patterns
+- groups
+- variables
+
+-------------
+
+Don't add VARIABLES directly in INVENTORY files,
+put them (in YAML files) inside DIRECTORIES:
+
+group_vars		(Group hosts together)
+host_vars		(Singe host per file)
+
+^^ In the same directory as INVENTORY file
+
+-------------
+
+To reference a VARIABLES in CLI:
+eg of A variable named: opt_dir
+
+*In this file:
+/etc/ansible/inventory/node1.local.vm
+	opt_dir: /opt
+
+*CLI:
+ansible node1.local.vm -i inventory -a "ls -l {{opt_dir}}"
+
+-------------
+
+## Dynamic INVENTORY:
+1. Must respond to:
+--list
+--host [HOSTNAME]
+
+2. Must return JSON formated output.
+
+
