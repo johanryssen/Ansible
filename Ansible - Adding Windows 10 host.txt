@@ -1,0 +1,186 @@
+# Set up Windows host on Ansible:
+
+1. WinRM setup
+1.1 Download this file:
+PS C:\temp> wget https://raw.githubusercontent.com/ansible/ansible/devel/examples/scripts/ConfigureRemotingForAnsible.ps1 -OutFile ConfigureRemotingForAnsible.ps1
+
+1.2 And run it:
+PS C:\temp> .\ConfigureRemotingForAnsible.ps1
+
+2. Install Pywinrm
+$ sudo pip install pywinrm
+
+3. Set up inventory file:
+[windows]
+win16
+win12
+
+[windows:vars]
+ansible_user="devops"
+ansible_password"Password321"
+ansible_connection=winrm
+ansible_winrm_transport=credssp
+ansible_winrm_server_cert_validation=ignore
+
+4. Test
+$ ansible windows -m win_ping -i inventory
+
+5. Sample playbook
+
+# vim win_install_chocolatey.yml
+---
+- hosts: windows
+  tasks:
+
+  - name: Install Chocolatey Dependencies
+    win_chocolatey:
+      name:
+       - chocolatey-core.extension
+       - chocolatey-windowsupdate.extension
+      state: present
+
+  - name: Install latest version of Notepad plus plus
+    win_chocolatey:
+      name: notepadplusplus
+      version: latest
+
+
+# Additional notes
+
+## Setup WinRM Listener
+PS C:\temp> winrm quickconfig
+WinRM service is already running on this machine.
+WSManFault
+    Message
+        ProviderFault
+            WSManFault
+                Message = WinRM firewall exception will not work since one of the network connection types on this machine is set to Public. Change the network connection type to either Domain or Private and try again.
+
+Error number:  -2144108183 0x80338169
+WinRM firewall exception will not work since one of the network connection types on this machine is set to Public.
+Change the network connection type to either Domain or Private and try again.
+
+
+## FIX ## 
+### Show Connection Profile
+
+PS C:\temp> Get-NetConnectionProfile
+Name             : myWifiAP 
+InterfaceAlias   : Wi-Fi
+InterfaceIndex   : 11
+NetworkCategory  : Public
+IPv4Connectivity : Internet
+IPv6Connectivity : NoTraffic
+
+Name             : myWifiAP 
+InterfaceAlias   : Ethernet
+InterfaceIndex   : 21
+NetworkCategory  : Public		<----- Set this to Private
+IPv4Connectivity : Internet
+IPv6Connectivity : NoTraffic
+
+
+### Set it to 'Private'
+PS C:\temp> Set-NetConnectionProfile -NetworkCategory Private
+
+### Show Connection Profile again
+PS C:\temp> Get-NetConnectionProfile
+Name             : myWifiAP 
+InterfaceAlias   : Wi-Fi
+InterfaceIndex   : 11
+NetworkCategory  : Private
+IPv4Connectivity : Internet
+IPv6Connectivity : NoTraffic
+
+Name             : myWifiAP 
+InterfaceAlias   : Ethernet
+InterfaceIndex   : 21
+NetworkCategory  : Private		<----- Private
+IPv4Connectivity : Internet
+IPv6Connectivity : NoTraffic
+
+
+===========================
+
+## Allow the Ansible Service Account access to this instance:
+Add the Ansbile service account to the "Administrator" group in "Local users and Groups"
+
+
+## View WinRM Listeners
+PS C:\temp> winrm enumerate winrm/config/Listener
+Listener
+    Address = *
+    Transport = HTTP
+    Port = 5985
+    Hostname
+    Enabled = true
+    URLPrefix = wsman
+    CertificateThumbprint
+    ListeningOn = 127.0.0.1, 169.254.67.10, 169.254.78.140, 169.254.129.23, 169.254.164.155, 10.10.10.223, 10.10.10.235, 172.23.176.1, 192.168.56.1, 192.168.88.1, 192.168.213.1, ::1, fe80::2d16:e545:c18d:bb17%59, fe80::38a6:9175:62de:f5e4%15, 
+
+Listener
+    Address = *
+    Transport = HTTPS
+    Port = 5986
+    Hostname = win16.local
+    Enabled = true
+    URLPrefix = wsman
+    CertificateThumbprint = 7C4F4FG77DB3D71BDD2D5D98F7572D4RT6Y1A1FE
+    ListeningOn = 127.0.0.1, 169.254.67.10, 169.254.78.140, 169.254.129.23, 169.254.164.155, 10.10.10.223, 10.10.10.235, 172.23.176.1, 192.168.56.1, 192.168.88.1, 192.168.213.1, ::1, fe80::2d16:e545:c18d:bb17%59, fe80::38a6:9175:62de:f5e4%15, 
+
+## View WinRM Service
+### Check CredSSP status 
+
+PS C:\temp> winrm get winrm/config/Service
+Service
+    RootSDDL = O:NSG:BAD:P(A;;GA;;;BA)(A;;GR;;;IU)S:P(AU;FA;GA;;;WD)(AU;SA;GXGW;;;WD)
+    MaxConcurrentOperations = 4294967295
+    MaxConcurrentOperationsPerUser = 1500
+    EnumerationTimeoutms = 240000
+    MaxConnections = 300
+    MaxPacketRetrievalTimeSeconds = 120
+    AllowUnencrypted = false
+    Auth
+        Basic = true
+        Kerberos = true
+        Negotiate = true
+        Certificate = false
+        CredSSP = false
+        CbtHardeningLevel = Relaxed
+    DefaultPorts
+        HTTP = 5985
+        HTTPS = 5986
+    IPv4Filter = *
+    IPv6Filter = *
+    EnableCompatibilityHttpListener = false
+    EnableCompatibilityHttpsListener = false
+    CertificateThumbprint
+    AllowRemoteAccess = true
+
+
+
+## Remove HTTP Listener:
+### View currrent Listeners:
+
+PS C:\temp> Get-ChildItem -Path WSMan:\localhost\Listener
+   WSManConfig: Microsoft.WSMan.Management\WSMan::localhost\Listener
+
+Type            Keys                                Name
+----            ----                                ----
+Container       {Transport=HTTPS, Address=*}        Listener_2049497238
+Container       {Transport=HTTP, Address=*}         Listener_860737296
+
+### Remote HTTP Listener
+PS C:\temp> Get-ChildItem -Path WSMan:\localhost\Listener | Where-Object { $_.Keys -eq "Transport=HTTP"}| Remove-Item -Recurse -Force
+
+### Confirg HTTP Listener has bee removed:
+PS C:\temp> Get-ChildItem -Path WSMan:\localhost\Listener
+   WSManConfig: Microsoft.WSMan.Management\WSMan::localhost\Listener
+
+Type            Keys                                Name
+----            ----                                ----
+Container       {Transport=HTTPS, Address=*}        Listener_2049497238
+
+
+### Restart WinRM service:
+PS C:\temp> Restart-Service winrm
