@@ -15,7 +15,7 @@ remote_user=root
 3. Check that new config is being used:
 ~/ansible$ ansible --version
 ansible 2.5.1
-  config file = /home/user1/ansible/ansible.cfg
+  config file = /home/devops/ansible/ansible.cfg
 
 4. Create inventory file and populate with hosts:
 $ vim inventory
@@ -35,24 +35,28 @@ $ ssh 10.10.10.12
 :~/ansible$ ssh-keygen -t rsa
 
 8. Create PlayBook to Install Public Key on remote systems:
-$ vim key.yml
-
+$ vim ssh_key_dist.yml
 ---
-- name: Add Key to hosts
-  hosts: all
+- hosts: squid
+  become: true
+  become_user: root
   tasks:
-  - name: Install Key
-    authorized_key:
-      user: user1
+  - name: Set AUTH KEY for user devops, copying it from current user (e.g. root) without validating the TLS/SSL cert
+    ansible.posix.authorized_key:
+      user: devop
       state: present
-      key: "{{ lookup('file', '/home/user1/.ssh/id_rsa.pub') }}"
+      key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_rsa.pub') }}"
+      validate_certs: False
+
+## run with:
+## ansible-playbook -i inventory ssh_key_dist.yml --ask-pass
+-or-
+## ansible-playbook -i inventory ssh_key_dist.yml --ask-become-pass --ask-pass
 
 
 9. Ensure the 'sshpass' package is installed
 
-10. Run key.yml playbook # -k prompts for password
-$ ansible-playbook -k key.yml
+10. Run ssh_key_dist.yml playbook # -k prompts for password
+$ ansible-playbook -k ssh_key_dist.yml
 SSH password:
-
-PLAY [Add Keys to hosts] *********************************
 ...

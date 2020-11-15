@@ -1,0 +1,37 @@
+---
+## Add the new account name in "./vars/newuser.yml" in the format:
+## newuser: <accountName>
+## The below password = ChangeThisPassword
+## Generate a new hashed password and replace the one below with:
+## python3 -c "from passlib.hash import sha512_crypt; import getpass; print(sha512_crypt.using(rounds=5000).hash(getpass.getpass()))"
+## Install 'passlib': pip3 install passlib
+- hosts: all
+  become: true
+  become_user: root
+  vars:
+    user_passwd: $6$OpXGqWrXDIR3qNgg$TK4gF6HDxbrg.oz12dKd.m0ZmxRW0Z4a7Qp4c2lPy5srs6cxZ6xkrz0rB0Z2EthrlDadnVirnQCpy4PbUt2A90
+  vars_files:
+    "./vars/newuser.yml"
+  tasks:
+  - name: Create remote user
+    user:
+      name: "{{ newuser }}"
+      shell: /bin/bash
+      create_home: yes
+      expires: -1
+      groups: wheel
+      password: "{{ user_passwd }}"
+      state: present
+  - name: Passwordless sudo
+    lineinfile:
+      path: "/etc/sudoers.d/{{ newuser }}"
+      line: "{{ newuser }}  ALL=(ALL)   NOPASSWD: ALL"
+      create: yes
+  - name: Disable password expiry
+    command: passwd -x -1 "{{ newuser }}"
+  - name: Copy current user's AUTH_KEY to "{{ newuser }}" on remote host
+    authorized_key:
+      user: "{{ newuser }}"
+      state: present
+      key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_rsa.pub') }}"
+      validate_certs: False
