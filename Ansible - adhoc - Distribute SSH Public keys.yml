@@ -43,7 +43,7 @@ $ vim ssh_key_dist.yml
   tasks:
   - name: Set AUTH KEY for user devops, copying it from current user (e.g. root) without validating the TLS/SSL cert
     ansible.posix.authorized_key:
-      user: devop
+      user: devops
       state: present
       key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_rsa.pub') }}"
       validate_certs: False

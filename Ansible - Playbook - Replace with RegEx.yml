@@ -1,0 +1,34 @@
+---
+- name: Apache ServerName update
+  hosts: web1.local.vm
+  become: yes
+
+  handlers:
+    - name: restart apache
+      service: name=httpd state=restarted
+
+  tasks:
+    - name: Update ServerName in httpd.conf
+      replace:
+        path: /etc/httpd/conf/httpd.conf
+        regexp: '(^ServerName\s)(.*)$'
+        replace: '\1web1.local.vm'
+        backup: yes
+        validate: apachectl -f %s -t
+      notify: restart apache
+
+###
+
+regexp:
+()	–	Group of Regular Expression and to create backreferences (\1) which will make it easy to perform BackReference while replacing.
+^	–	Matches the Start of a Line
+ServerName	–	Matches the Literal String 'ServerName'
+\s	–	Matches a whitespace
+.*	–	Matches one or more of any char (not a new line)
+$	–	Matches the end of line
+
+
+replace:  A string, with which you want to replace the matched String
+
+\1	–	BackReference indicator - Represents the first group we matched.
+		Here it is the result of (^ServerName\s)
