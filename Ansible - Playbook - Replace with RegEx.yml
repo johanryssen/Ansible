@@ -20,7 +20,7 @@
 ###
 
 regexp:
-()	–	Group of Regular Expression and to create backreferences (\1) which will make it easy to perform BackReference while replacing.
+()	–	Group of Regular Expression and to create a BackReference (\1) which will make it easy to perform BackReference while replacing.
 ^	–	Matches the Start of a Line
 ServerName	–	Matches the Literal String 'ServerName'
 \s	–	Matches a whitespace

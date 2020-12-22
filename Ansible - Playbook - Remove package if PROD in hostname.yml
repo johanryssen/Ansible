@@ -3,8 +3,9 @@
   hosts: all
   become: yes
   tasks:
-   - name: Remove telnet from Prod servers
-     yum:
-      name: telnet
-      state: absent
-     when: "'prod' is in inventory_hostname"
+    - name: Remove telnet from Prod servers
+      yum:
+       name: telnet
+       state: absent
+      when: "'prod' is in inventory_hostname"
+      
