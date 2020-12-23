@@ -1,0 +1,11 @@
+---
+- name: Debug example
+  hosts: host01.local.vm
+  become: yes
+
+  tasks:
+    - name: Printing Hostname
+      debug: msg="The hostname is {{ ansible_hostname }}"
+
+    - name: Printing Free Memory
+      debug: msg="Free Memory for this system is {{ ansible_memfree_mb }} Mb"
