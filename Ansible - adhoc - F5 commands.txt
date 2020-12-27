@@ -1,9 +1,9 @@
 
 ## tmsh = Traffic Management Shell
-### gtm = Global Traffic Manager
-### asm = Application Security Manager
+### gtm = Global Traffic Module (DNS)
+### asm = Application Security Module
 ### apm = Access Policy Module
-### ltm = Local Traffic Manager
+### ltm = Local Traffic Module
 ### cm  ~ Config/Component mgmt
 
 --------------------
