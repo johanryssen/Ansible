@@ -39,68 +39,60 @@ $ ansible windows -m win_ping -i inventory
        - chocolatey-windowsupdate.extension
       state: present
 
-  - name: Install latest version of Notepad plus plus
+  - name: Install latest version of Notepad++
     win_chocolatey:
       name: notepadplusplus
       version: latest
+...
 
-
-# Additional notes
+================ WinRM ================
 
 ## Setup WinRM Listener
 PS C:\temp> winrm quickconfig
-WinRM service is already running on this machine.
-WSManFault
-    Message
-        ProviderFault
-            WSManFault
-                Message = WinRM firewall exception will not work since one of the network connection types on this machine is set to Public. Change the network connection type to either Domain or Private and try again.
-
-Error number:  -2144108183 0x80338169
-WinRM firewall exception will not work since one of the network connection types on this machine is set to Public.
-Change the network connection type to either Domain or Private and try again.
+	...
+	WinRM firewall exception will not work since one of the network connection types on this machine is set to Public.
+	Change the network connection type to either Domain or Private and try again.
 
 
 ## FIX ## 
+
+PS > winrm help config
+
+PS > winrm e winrm/config/listener
+
+PS > winrm get winrm/config
+
+PS > Enable-PSRemoting -SkipNetworkProfileCheck
+
+PS > Import-Module NetConnection
+
 ### Show Connection Profile
 
-PS C:\temp> Get-NetConnectionProfile
-Name             : myWifiAP 
-InterfaceAlias   : Wi-Fi
-InterfaceIndex   : 11
-NetworkCategory  : Public
-IPv4Connectivity : Internet
-IPv6Connectivity : NoTraffic
+PS > Get-NetConnectionProfile
+	Name             : Network 3
+	InterfaceAlias   : Ethernet0
+	InterfaceIndex   : 4
+	NetworkCategory  : Public			<----- Set to Private
+	IPv4Connectivity : Internet
+	IPv6Connectivity : NoTraffic
 
-Name             : myWifiAP 
-InterfaceAlias   : Ethernet
-InterfaceIndex   : 21
-NetworkCategory  : Public		<----- Set this to Private
-IPv4Connectivity : Internet
-IPv6Connectivity : NoTraffic
+PS > Set-NetConnectionProfile -NetworkCategory Private
 
+PS > Get-NetConnectionProfile
+	Name             : Network 3
+	InterfaceAlias   : Ethernet0
+	InterfaceIndex   : 4
+	NetworkCategory  : Private			<-----
+	IPv4Connectivity : Internet
+	IPv6Connectivity : NoTraffic
 
-### Set it to 'Private'
-PS C:\temp> Set-NetConnectionProfile -NetworkCategory Private
+PS > winrm quickconfig
 
-### Show Connection Profile again
-PS C:\temp> Get-NetConnectionProfile
-Name             : myWifiAP 
-InterfaceAlias   : Wi-Fi
-InterfaceIndex   : 11
-NetworkCategory  : Private
-IPv4Connectivity : Internet
-IPv6Connectivity : NoTraffic
+PS > Set-WSManQuickConfig -Force
+WinRM is already set up to receive requests on this computer.
+WinRM is already set up for remote management on this computer.
 
-Name             : myWifiAP 
-InterfaceAlias   : Ethernet
-InterfaceIndex   : 21
-NetworkCategory  : Private		<----- Private
-IPv4Connectivity : Internet
-IPv6Connectivity : NoTraffic
-
-
-===========================
+-----------------------
 
 ## Allow the Ansible Service Account access to this instance:
 Add the Ansbile service account to the "Administrator" group in "Local users and Groups"
@@ -145,7 +137,7 @@ Service
         Kerberos = true
         Negotiate = true
         Certificate = false
-        CredSSP = false
+        CredSSP = false					<----------------
         CbtHardeningLevel = Relaxed
     DefaultPorts
         HTTP = 5985
@@ -157,9 +149,10 @@ Service
     CertificateThumbprint
     AllowRemoteAccess = true
 
-
+-----------------------
 
 ## Remove HTTP Listener:
+
 ### View currrent Listeners:
 
 PS C:\temp> Get-ChildItem -Path WSMan:\localhost\Listener
@@ -184,3 +177,5 @@ Container       {Transport=HTTPS, Address=*}        Listener_2049497238
 
 ### Restart WinRM service:
 PS C:\temp> Restart-Service winrm
+
+-----------------------
