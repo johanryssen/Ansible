@@ -1,0 +1,5 @@
+ansible-config dump -v -\-only-changed
+
+-----
+ansible-galaxy list
+ 
