@@ -1,0 +1,55 @@
+ansible-config dump --only-changed
+
+
+----- LOG PATH -----
+# Before:
+DEFAULT_LOG_PATH(default) = None
+
+# Change:
+export ANSIBLE_LOG_PATH=/home/ansible/ansible/logs/ansible.log
+
+# After:
+ansible-config dump | grep -i log_path
+DEFAULT_LOG_PATH(env: ANSIBLE_LOG_PATH) = /home/ansible/ansible/logs/ansible.log
+
+
+
+
+----- MODULE SEARCH PATH ----- 
+# Before:
+configured module search path = [u'/usr/share/ansible/plugins/modules']
+# After"
+configured module search path = [u'/home/ansible/ansible/plugins/modules']
+
+# Change: DEFAULT_MODULE_PATH
+ansible.cfg:
+library = /home/ansible/ansible/plugins/modules
+
+$ ansible-config dump | grep DEFAULT_MODULE_PATH
+DEFAULT_MODULE_PATH(/home/ansible/ansible/ansible.cfg) = [u'/home/ansible/ansible/plugins/modules']
+
+
+
+----- 
+
+$ ansible-config dump --only-changed
+DEFAULT_HOST_LIST(/home/ansible/ansible/ansible.cfg) = [u'/home/ansible/ansible/inventory']
+DEFAULT_LOG_PATH(env: ANSIBLE_LOG_PATH) = /home/ansible/ansible/logs/ansible.log
+DEFAULT_MODULE_PATH(/home/ansible/ansible/ansible.cfg) = [u'/home/ansible/ansible/plugins/modules']
+DEFAULT_REMOTE_USER(/home/ansible/ansible/ansible.cfg) = devops
+
+
+-----
+
+ansible-config dump -v --only-changed
+----------
+ansible-galaxy list
+----------
+ansible-galaxy collection install ansible.utils
+
+ansible.cfg
+collections_paths = /home/devops/ansible/collections
+----------
+
+
+

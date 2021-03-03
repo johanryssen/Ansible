@@ -1,9 +1,0 @@
-ansible-config dump -v --only-changed
-----------
-ansible-galaxy list
-----------
-ansible-galaxy collection install ansible.utils
-
-ansible.cfg
-collections_paths = /home/devops/ansible/collections
-----------

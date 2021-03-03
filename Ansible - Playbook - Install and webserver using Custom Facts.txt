@@ -1,4 +1,4 @@
-# Install and Start HTTPD with custom facts
+# Install a Start HTTPD with custom facts
 
 # Create custom.fact file:
 $ vim custom.fact
