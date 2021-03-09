@@ -6,7 +6,6 @@ WebUI
 2. Create Inventory
 WebUI
 
-
 3. Create Hosts
 WebUI > Inventory > Hosts
 

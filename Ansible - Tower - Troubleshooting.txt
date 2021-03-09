@@ -1,12 +1,19 @@
+=== SERVICE STATUS ===
+
 ansible-tower-service status
 supervisord status
 
-# PORTS #
+
+=== PORTS ===
 nginx	80/tcp	443/tcp
 postgresql	5432/tcp
 supervisord
 rabbitmq-server	beam	5672/tcp	15672/tcp	25672/tcp
+-or-
+reddis
 
+
+=== FILES ===
 /var/lib/awx/projects - Files pulled from source control
 /var/lib/awx/job_status - Stores job status output after playbook exec
 /var/lib/awx/public/static - Django appl
@@ -14,11 +21,12 @@ rabbitmq-server	beam	5672/tcp	15672/tcp	25672/tcp
 DISK SPACE: /var/lib/awx
 /var > 1 Gb free space
 
-# LOGS #
+=== LOGS ===
 /var/log/tower/*
 /var/log/supervisor/supervisor.log # Django logs
 
-=============
+
+=== PLAYBOOKS ===
 
 Playbooks are run from /tmp
 
@@ -27,8 +35,10 @@ If playbooks doesn't appear in job template playbook-list:
 - chmod/chown
 - ls -ls /var/lib/awx/projects
 
----
-
-# Change password:
+=== CHANGE PASSWORD ===
 awx-manage changepassword admin
+tower-manage changepassword admin
+
+=== CREATE ADMIN USER ===
+tower-manage createsuperuser
 
