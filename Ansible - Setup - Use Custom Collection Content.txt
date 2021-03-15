@@ -1,0 +1,10 @@
+Configure Ansible to pick up custom collection content
+
+Default COLLECTIONS_PATHS = ~/.ansible/collections:/usr/share/ansible/collections
+
+Tell Ansible about the location of the custom collection content > COLLECTIONS_PATHS
+
+$ cat ansible.cfg 
+[defaults]
+inventory = ./inventory 
+COLLECTIONS_PATHS = ./collections

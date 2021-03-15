@@ -42,3 +42,51 @@ tower-manage changepassword admin
 === CREATE ADMIN USER ===
 tower-manage createsuperuser
 
+
+=== UNABLE TO LOGIN TO TOWER VIA HTTP ===
+
+Access to Tower is intentionally restricted through a secure protocol (HTTPS).
+
+In cases where your configuration is set up to run a Tower node behind a load balancer or proxy as "HTTP only", and you only want to access it without SSL (for troubleshooting, for example), change:
+# /etc/tower/conf.d/custom.py
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
+
+Changing these settings to False will allow Tower to manage cookies and login sessions when using the HTTP protocol.
+This must be done on every node of a cluster installation to properly take effect.
+
+# Apply changes:
+ansible-tower-service restart
+
+
+=== PROBLEMS RUNNING A PLAYBOOK ===
+
+Are you authenticating with the user currently running the commands? 
+If not, check how the username has been setup or pass the --user=username or -u username commands to specify a user.
+
+Is your YAML file correctly indented?
+You may need to line up your whitespace correctly.
+You can use yamlint to check your playbook.
+
+
+=== PLAYBOOKS AREN’T SHOWING UP IN THE "JOB TEMPLATE" DROP-DOWN ===
+Make sure that the playbook is valid YML and can be parsed by Ansible.
+Make sure the permissions and ownership of the project path (/var/lib/awx/projects) is set up so that the "awx" system user can view the files.
+Change the ownership:
+chown awx -R /var/lib/awx/projects/
+
+
+=== VIEW ANSIBLE OUTPUTS FOR JSON COMMANDS WHEN USING TOWER ===
+To view the Ansible outputs, browse to:
+https://<tower server name>/api/v1/jobs/<job_id>/job_events/
+
+
+=== TOWER CLI TOOL ===
+
+pip install ansible-tower-cli
+https://github.com/ansible/tower-cli/blob/master/README.md
+
+
+=== CHANGING THE TOWER ADMIN PASSWORD ===
+tower-manage changepassword admin
+
