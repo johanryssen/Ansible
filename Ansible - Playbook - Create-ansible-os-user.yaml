@@ -1,0 +1,45 @@
+---
+# Create password - Centos: 
+# python3.6 -c 'import crypt; print(crypt.crypt("Passw0rd123", crypt.mksalt(crypt.METHOD_SHA512)))'
+- hosts: all
+  vars:
+    ara_playbook_name: Create Ansible User
+    ara_playbook_labels:
+        - osbuild
+    ansible_connection: ssh
+    ansible_user: root
+    ansible_ssh_pass: !vault |
+          $ANSIBLE_VAULT;1.1;AES256
+          33376237313434343432316239376236663338343863343339636365643162303339306437333336
+          3432326331306534306264366632336630623162636361350a646463636634343830653036323037
+          39323833356565633561626336356262393462316233633263653730363662386339333664353033
+          6131313736303666360a366564636331396631303834313063366538663765393065633361653663
+          3332
+    user: svc-ansible
+    user_password: $6$aSZpFMrm.kSNiHaG$Riu4nZiOTf1WQ/bGMb3scLPh9.aFex2555Pa22c10./.AK0ltPrv7uMMWeKjPXT31rfrXwVQTPjJAWQTG2D6F1
+  gather_facts: no
+  # remote_user: 
+  become: true
+  tasks:
+  - name: Create an ansible sevice account
+    user:
+      name: "{{ user }}"
+      shell: /bin/bash
+      create_home: yes
+      comment: Service account for ansible
+      groups: wheel
+      password: "{{ user_password }}"
+  - name: Add ansible service account to the sudoers
+    copy:
+      dest: "/etc/sudoers.d/{{ user }}"
+      content: "{{ user }}  ALL=(ALL)  NOPASSWD: ALL"
+  - name: Deploy SSH Key
+    authorized_key:
+      user="{{ user }}"
+      key="{{ lookup('file', '/automation/vault/ansible_rsa.pub') }}" 
+      state=present
+  handlers:
+  - name: restart ssh
+    service:
+      name=sshd
+      state=restarted
