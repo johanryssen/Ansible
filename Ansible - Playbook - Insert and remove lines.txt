@@ -1,0 +1,24 @@
+# Insert new line: 'PasswordAuthentication no' under the line regex '#PermitEmptyPasswords' in '/etc/ssh/sshd_config'
+
+- name: Insert New Line under the Regex configuration
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    backup: yes
+    regexp: '^PasswordAuthentication '
+    insertafter: '^#PermitEmptyPasswords '
+    line: 'PasswordAuthentication no'
+    validate: '/usr/sbin/sshd -T -f %s'
+
+...
+
+# Remove comment at beginning of line using the replace module.
+Uncomment 'server_tokens' in '/etc/nginx/nginx.conf'.
+
+- name: Uncomment configuration
+  replace:
+    path: /etc/nginx/nginx.conf
+    regexp: '#(\s+)server_tokens'
+    replace: 'server_tokens'
+    backup: yes
+	
+...
