@@ -1,0 +1,158 @@
+F5 modules for Ansible use the RestAPI
+
+therefore, we don't want Ansible to attempt to connect to the BIGIP appliance connect using SSH
+(which is the Ansible default)
+
+This playbook statement:
+	connection: local
+tells Ansible to run the playbook LOCALLY, instead of attempting an SSH connectiong to the BIGIP device.
+
+So the task in the playbook will execute on the machine running the playbook.
+
+--------------------
+-or-
+within an individual play:
+	delegate_to: localhost
+--------------------
+
+
+### Playbook: Creating pool on BIG-IP ###
+
+---
+- name: Create Pool
+  hosts: bigip
+  connection: local
+
+  tasks:
+    - name: Create web servers pool
+      bigip_pool:
+        name: webservers
+        lb_method: ratio-member
+        password: admin
+        server: 10.10.10.21
+        user: admin
+        validate_certs: no
+...
+
+
+
+### Playbook: Adding nodes to pool ###
+
+---
+- name: Add Nodes to Pool
+  hosts: bigip
+  connection: local
+
+  vars:
+    validate_certs: no
+    username: admin
+    password: admin
+
+  tasks:
+    - name: Add nodes to pool
+      bigip_pool_member:
+        description: webserver-1
+        host: 10.10.10.30
+        name: server
+        password: "{{ password }}"
+        pool: webservers
+        port: 80
+        server: 10.10.10.123
+        user: "{{ username }}"
+        validate_certs: "{{ validate_certs }}"
+...
+
+
+
+### Playbook: Creating Virtual Server on BIG-IP ##
+
+---
+- name: Create Virtual Server
+  hosts: bigip
+  connection: local
+
+  vars:
+    validate_certs: no
+    username: admin
+    password: admin
+
+  tasks:
+    - name: Create web server VIP
+      bigip_virtual_server:
+        description: webserver_vip
+        destination: 10.1.1.
+        password: "{{ password }}"
+        name: vip-01
+        pool: webservers
+        port: 80
+        server: 10.10.10.34
+        snat: Automap
+        user: "{{ username }}"
+        profiles:
+          - http
+          - clientssl
+        validate_certs: "{{ validate_certs }}"
+...
+
+
+
+### Playbook: Saving Config ###
+
+---
+- name: Saving Config
+  hosts: bigip
+  connection: local
+
+  vars:
+    validate_certs: no
+    username: admin
+    password: admin
+
+  tasks:
+    - name: Save running conf
+      bigip_config:
+        save: yes
+        password: "{{ password }}"
+        server: 10.10.10.45
+        validate_certs: "{{ validate_certs }}"
+        user: "{{ username }}"
+...
+
+
+
+### Playbook: Waiting for device boot/reboot ###
+
+---
+- name: Wait for boot/reboot
+  hosts: bigip
+  connection: local
+
+  vars:
+    validate_certs: no
+    username: admin
+    password: admin
+
+  tasks:
+    - name: Reboot BIG-IP
+      bigip_command:
+        commands: tmsh reboot
+        user: "{{ username }}"
+        password: "{{ password }}"
+        server: 10.10.10.48
+        validate_certs: "{{ validate_certs }}"
+      ignore_errors: true
+
+    - name: Wait for shutdown
+      pause:
+        seconds: 90
+
+    - name: Wait for BIG-IP to be ready
+      bigip_wait:
+        user: "{{ username }}"
+        password: "{{ password }}"
+        server: 10.10.10.48
+        validate_certs: "{{ validate_certs }}"
+		
+...
+
+###
