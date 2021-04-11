@@ -1,0 +1,128 @@
+towercli / awx
+
+### Basic Usage ###
+
+## Installation
+# RHEL 7
+yum-config-manager --add-repo https://releases.ansible.com/ansible-tower/cli/ansible-tower-cli-el7.repo
+yum install ansible-tower-cli
+
+# RHEL 8
+dnf config-manager --add-repo https://releases.ansible.com/ansible-tower/cli/ansible-tower-cli-el8.repo
+dnf install ansible-tower-cli
+
+
+## Syntax
+awx [<global-options>] <resource> <action> [<arguments>]
+
+
+## Getting Started
+# E.g. for interacting with an AWX / Red Hat Ansible Tower server:
+awx --conf.host https://awx.example.org \
+--conf.username joe --conf.password secret \
+--conf.insecure \
+users list
+
+
+## Resources and Actions
+# List available resources:
+awx --conf.host https://awx.example.org --help
+
+# Description of a specific resource, and list its available actions (and their arguments):
+awx --conf.host https://awx.example.org users --help
+awx --conf.host https://awx.example.org users create --help
+
+
+### Authentication ###
+
+## Generating a Personal Access Token
+# awx provides a simple login command for generating a personal access token from your username and password.
+
+TOWER_HOST=https://awx.example.org \
+TOWER_USERNAME=jo \
+TOWER_PASSWORD=secret \
+awx login
+
+-or-
+$ tower-cli login username --scope read
+Password:
+
+# As a convenience, the awx login -f human command prints a shell-formatted token value:
+export TOWER_OAUTH_TOKEN=3rgdk498fkdslksdf
+
+# By ingesting this token, you can run subsequent CLI commands without having to specify your username and password each time:
+export TOWER_HOST=https://awx.example.org
+$(TOWER_USERNAME=alice TOWER_PASSWORD=secret awx login -f human)
+awx config
+
+-or-
+$ tower-cli config host tower.example.com
+$ tower-cli config username user
+$ tower-cli config password pass
+
+
+### Usage Examples ###
+
+## Verifying CLI Configuration
+awx config
+
+## Printing Job History
+awx jobs list --all --name 'Example Job Template' -f human --filter 'name,created,status'
+
+## Print results in YAML
+awx jobs list -f yaml
+
+## Human-Readable (Tabular) Formatting
+#  awx also provides support for printing results in a human-readable ASCII table format:
+awx jobs list -f human
+awx jobs list -f human --filter name,created,status
+awx jobs list -f human --filter *
+
+## Creating and Launching a Job Template
+awx projects create --wait \
+--organization 1 --name='Example Project' \
+--scm_type git --scm_url 'https://github.com/ansible/ansible-tower-samples' \
+-f human
+
+awx job_templates create \
+--name='Example Job Template' --project 'Example Project' \
+--playbook hello_world.yml --inventory 'Demo Inventory' \
+-f human
+
+awx job_templates launch 'Example Job Template' --monitor -f human
+
+
+##  Updating a Job Template with Extra Vars
+awx job_templates modify 1 --extra_vars "@vars.yml"
+awx job_templates modify 1 --extra_vars "@vars.json"
+
+-or-
+tower-cli job_template list
+$ tower-cli job_template list --format json
+$ tower-cli job launch -J <ID of the job template> --monitor
+
+
+## Importing an SSH Key
+awx credentials create --credential_type 'Machine' \
+--name 'My SSH Key' --user 'alice' \
+--inputs '{"username": "server-login", "ssh_key_data": "@~/.ssh/id_rsa"}'
+
+
+## Import/Export
+# Intended to be similar to tower-cli send and tower-cli receive.
+
+# Exporting everything:
+awx export
+
+# Exporting everything of some particular type or types:
+awx export --users
+
+# Exporting a particular named resource:
+awx export --users admin
+
+# Exporting a resource by id:
+awx export --users 42
+
+# Importing a set of resources stored as a file:
+awx import < resources.json
+
