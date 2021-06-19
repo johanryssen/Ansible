@@ -1,5 +1,6 @@
 # ANSIBLE-GALAXY #
-ansible-galaxy init myrole1
+# Create blank role:
+ansible-galaxy init roles/sample_role
 
 ---------------
 

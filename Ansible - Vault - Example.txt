@@ -1,0 +1,27 @@
+## Generate new secret with:
+$ ansible-vault encrypt_string
+
+## Playbook:
+---
+- name: subscribe
+  hosts: rhel
+  become: true
+  tasks:
+    - name: Read passwd var
+	  include_vars:
+	    file: rhel_cred.yml
+	
+    - name: Register and auto-subscribe to available content.
+      redhat_subscription:
+        state: present
+        username: <CHANGE_TO_RHN_USERNAME>
+        password: "{{ user_password | password_hash('sha512') }}"
+        auto_attach: true
+
+
+...
+
+You can also set ANSIBLE_VAULT_PASSWORD_FILE environment variable,
+e.g. ANSIBLE_VAULT_PASSWORD_FILE=~/.vault_pass.txt
+and Ansible will automatically search for the password in that file.
+This is something you may wish to do if using Ansible from a continuous integration system like Jenkins.
