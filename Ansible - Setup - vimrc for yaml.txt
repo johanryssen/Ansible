@@ -1,3 +1,10 @@
+## ~/.vimrc ##
+colo desert
+set paste
+let &l:colorcolumn = join(range(5,20,5),',')
+
+
+
 ## VIM setup for yaml/Ansible
 # In an active vim session:
 :set ai ts=2 sw=2
@@ -34,4 +41,11 @@ syntax on
 filetype indent plugin on
 
 set ruler
+
+
+#---- ALT ----#
+colo desert
+set number
+autocmd FileType yaml setlocal ai et cuc cul sw=2 ts=2
+------------
 
