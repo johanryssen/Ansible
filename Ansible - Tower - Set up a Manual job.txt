@@ -30,7 +30,7 @@ SCM Type = Manual
 Playbook Directory: /var/lib/awx/projects/DEMO
 
 6. Create Job Template
-WebUI > Add > Job Template
+WebUI > Templates > Add > Job Template
 
 7. Launch the Job
 WebUI
