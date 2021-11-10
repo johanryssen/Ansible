@@ -1,17 +1,27 @@
-# Set up a simple webpage
+#!/bin/bash
+echo "Set up a simple webpage"
+echo ""
+echo "1. Collect facts for the localhost:"
+ansible localhost -bm setup --tree /tmp/facts
+echo ""
 
-1. Collect facts for the localhost:
-ansible localhost -m setup --tree /tmp/facts
-ls /tmp/facts/127.0.0.1
+echo "2. Install Apache:"
+ansible localhost -bm yum -a "name=httpd state=present"
+echo ""
 
-2. Install Apache:
-ansible localhost -m yum -a "name=httpd state=present" --become
+echo "3. Allow p80 through firewall"
+ansible localhost -bm firewalld -a "service=http state=enabled immediate=true permanent=true"
+echo ""
 
-3. Copy fact to apache index file:
-ansible localhost -m copy -a "src=/tmp/facts/127.0.0.1 dest=/var/www/html/index.html mode=0600 owner=apache group=apache" --become
+echo "4. Copy fact to apache index file:"
+ansible localhost -bm copy -a "src=/tmp/facts/localhost dest=/var/www/html/index.html mode=0600 owner=apache group=apache"
+echo ""
 
-4. Start Apache:
-ansible localhost -m service -a "name=httpd state=started enabled=yes" --become
+echo "5. Start Apache:"
+ansible localhost -bm service -a "name=httpd state=started enabled=yes"
+echo ""
 
-5. Confirm that the page is served:
-curl localhost
+echo "6. Confirm that the page is served:"
+curl http://localhost
+echo ""
+exit 0;

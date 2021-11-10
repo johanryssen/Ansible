@@ -1,0 +1,42 @@
+# ansible.cfg
+[defaults]
+callback_plugins=/home/devops/.local/lib/python3.6/site-packages/ara/plugins/callback
+action_plugins=/home/devops/.local/lib/python3.6/site-packages/ara/plugins/action
+
+
+
+# ENV:
+export ANSIBLE_CALLBACK_PLUGINS=/home/devops/.local/lib/python3.6/site-packages/ara/plugins/callback
+export ANSIBLE_ACTION_PLUGINS=/home/devops/.local/lib/python3.6/site-packages/ara/plugins/action
+
+
+## Find:
+$ python3 -m ara.setup.path
+/usr/lib/python3.7/site-packages/ara
+
+$ python3 -m ara.setup.plugins
+/usr/lib/python3.7/site-packages/ara/plugins
+
+$ python3 -m ara.setup.action_plugins
+/usr/lib/python3.7/site-packages/ara/plugins/action
+
+$ python3 -m ara.setup.callback_plugins
+/usr/lib/python3.7/site-packages/ara/plugins/callback
+
+# Note: This doesn't export anything, it only prints the commands.
+# If you want to export directly from the command, you can use:
+#     source <(python3 -m ara.setup.env)
+$ python3 -m ara.setup.env
+export ANSIBLE_CALLBACK_PLUGINS=/usr/lib/python3.7/site-packages/ara/plugins/callback
+export ANSIBLE_ACTION_PLUGINS=/usr/lib/python3.7/site-packages/ara/plugins/action
+
+$ python3 -m ara.setup.ansible
+[defaults]
+callback_plugins=/usr/lib/python3.7/site-packages/ara/plugins/callback
+action_plugins=/usr/lib/python3.7/site-packages/ara/plugins/action
+
+----------------------------
+
+
+ara-manage runserver --help
+

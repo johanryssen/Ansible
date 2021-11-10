@@ -154,5 +154,3 @@ within an individual play:
         validate_certs: "{{ validate_certs }}"
 		
 ...
-
-###

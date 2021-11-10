@@ -31,15 +31,13 @@ $ vim setup_facts.yml
 # Run the playbook:	
 $ ansible-playbook setup_facts.yml
 
-
 # View only the ansible_local section, which contains user-defined facts:
 $ ansible webservers -m setup -a 'filter=ansible_local'
 
+# Write a playbook that uses both default and user-defined facts to configure the webservers host group, and make sure that all of the tasks are defined.
 
-# Now write a playbook that uses both default and user-defined facts to configure the webservers host group, and make sure that all of the tasks are defined.
-
-First  task: Install the httpd package, using the user fact for the name of the package.
-Second task: Use the custom fact to start the httpd service
+- First  task: Install the httpd package, using the user fact for the name of the package.
+- Second task: Use the custom fact to start the httpd service
 
 $ vim setup_facts_httpd.yml
 - name: Install Apache and starts the service
@@ -55,12 +53,11 @@ $ vim setup_facts_httpd.yml
     service:
       name: "{{ ansible_local.custom.general.service }}"
       state: "{{ ansible_local.custom.general.state }}"
-
+...
 
 
 # Run the playbook:	 
 $ ansible-playbook setup_facts_httpd.yml
-
 
 # Conmfirm that the httpd service is running on webservers:
 $ ansible webservers -m command -a 'systemctl status httpd'
