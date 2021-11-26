@@ -1,0 +1,32 @@
+### Pre requisites
+
+dnf install python39-pip -y
+dnf install python3-virtualenv -y
+
+python3 -V
+which python3
+mkdir python-venv
+cd !$
+
+### Install Ansible 2.9 in Python virtual environment:
+
+python3 -m venv ansible2.9
+source ansible2.9/bin/activate
+
+--- (ansible2.9)$ ---
+python3 -m pip install --upgrade pip
+python3 -m pip install ansible==2.9
+python3 -m pip install wheel
+python3 -m pip list
+
+deactivate
+
+### Install Ansible 3.0 in Python virtual environment:
+
+python3 -m venv ansible3.0
+source ansible3.0/bin/activate
+
+--- (ansible3.0)$ ---
+python3 -m pip install --upgrade pip
+python3 -m pip install ansible==3.0
+

@@ -4,7 +4,6 @@ callback_plugins=/home/devops/.local/lib/python3.6/site-packages/ara/plugins/cal
 action_plugins=/home/devops/.local/lib/python3.6/site-packages/ara/plugins/action
 
 
-
 # ENV:
 export ANSIBLE_CALLBACK_PLUGINS=/home/devops/.local/lib/python3.6/site-packages/ara/plugins/callback
 export ANSIBLE_ACTION_PLUGINS=/home/devops/.local/lib/python3.6/site-packages/ara/plugins/action

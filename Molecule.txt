@@ -1,0 +1,424 @@
+----------------------------------
+
+# Docker install
+
+sudo apt update
+sudo apt install -y apt-transport-https ca-certificates curl software-properties-common
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable"
+sudo apt update -y
+sudo apt install -y docker-ce aufs-tools cgroupfs-mount docker-ce-rootless-extras
+sudo usermod -aG docker ${USER}
+# logout and in again
+
+----------------------------------
+
+# Set up Virtual Environment
+
+mkdir python-venv
+cd !$
+
+sudo apt install python3-venv python3-virtualenv virtualenv -y
+
+python3 -m venv ~/python-venv/molecule
+source ~/python-venv/molecule/bin/activate
+echo -e "\nsource ~/python-venv/molecule/bin/activate\ncd ~/python-venv/molecule" >> ~/.bash_profile
+
+----------------------------------
+
+# Molecule setup
+
+pip3 install --upgrade pip
+
+pip3 install crypto setuptools_rust wheel ansible-lint
+
+pip3 install "molecule[lint,ansible,docker]"
+
+molecule --version
+mol --version
+
+----------------------------------
+
+# Create a role:
+
+mkdir roles
+cd roles
+mol init role mywebapp --driver-name=docker
+cd mywebapp
+
+----------------------------------
+
+## List all the rules
+ansible-lint -L
+
+## Enable Linting:
+# Append to :
+# molecule/default/molecule.yml
+lint: |
+  set -e
+  yamllint .
+  ansible-lint .
+
+## Check linting:
+mol lint
+## ^^ Errors due to 'meta/main.yml' not being updated 
+
+# Edit: meta/main.yml
+
+galaxy_info:
+  author: andrew
+  description: simple web install
+  company: tup
+  license: Apache
+  min_ansible_version: 2.9
+  platforms:
+   - name: centos
+     versions:
+     - 8
+   - name: ubuntu
+     versions:
+     - 20.04
+  galaxy_tags: []
+dependencies: [] 
+
+
+----------------------------------
+
+# List status of instances
+
+$ mol list
+INFO     Running default > list
+                ╷             ╷                  ╷               ╷         ╷
+  Instance Name │ Driver Name │ Provisioner Name │ Scenario Name │ Created │ Converged
+╶───────────────┼─────────────┼──────────────────┼───────────────┼─────────┼───────────╴
+  instance      │ docker      │ ansible          │ default       │ false   │ false
+
+# Default instance ^^
+
+----------------------------------
+
+## Set up CentOS and Ubuntu instances
+
+# Edit: 
+/python-venv/molecule/roles/mywebapp/molecule/default/molecule.yml
+
+# Delete 4 lines:
+
+platforms:
+  - name: instance
+    image: docker.io/pycontribs/centos:8
+    pre_build_image: true
+###
+
+
+# Add:
+
+platforms:
+  - name: centos
+    image: geerlingguy/docker-centos8-ansible
+    pre_build_image: true
+    command: ${MOLECULE_DOCKER_COMMAND:-""}
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    privileged: true
+  - name: ubuntu
+    image: geerlingguy/docker-ubuntu2004-ansible
+    command: ${MOLECULE_DOCKER_COMMAND:-""}
+    pre_build_image: true
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    privileged: true
+###
+
+
+----------------------------------
+
+# List status of instances
+
+$ mol list
+INFO     Running default > list
+                ╷             ╷                  ╷               ╷         ╷
+  Instance Name │ Driver Name │ Provisioner Name │ Scenario Name │ Created │ Converged
+╶───────────────┼─────────────┼──────────────────┼───────────────┼─────────┼───────────╴
+  centos        │ docker      │ ansible          │ default       │ false   │ false
+  ubuntu        │ docker      │ ansible          │ default       │ false   │ false
+
+
+----------------------------------
+
+# Download CentOS and Ubuntu Images
+# create: Use the provisioner to start the instances.
+# Using ansible to provision docker systems$ mol create
+
+$ mol create
+...
+PLAY RECAP *****
+localhost                  : ok=5    changed=2    unreachable=0    failed=0    skipped=4    rescued=0    ignored=0
+
+INFO     Running default > prepare
+WARNING  Skipping, prepare playbook not configured.
+
+
+----------------------------------
+
+# Instances are now Created=true
+
+$ mol list
+INFO     Running default > list
+                ╷             ╷                  ╷               ╷         ╷
+  Instance Name │ Driver Name │ Provisioner Name │ Scenario Name │ Created │ Converged
+╶───────────────┼─────────────┼──────────────────┼───────────────┼─────────┼───────────╴
+  centos        │ docker      │ ansible          │ default       │ true    │ false
+  ubuntu        │ docker      │ ansible          │ default       │ true    │ false
+
+
+----------------------------------
+
+# View Docker images:
+
+$ docker images
+REPOSITORY                              TAG       IMAGE ID       CREATED       SIZE
+geerlingguy/docker-centos8-ansible      latest    389879de406b   5 days ago    800MB
+geerlingguy/docker-ubuntu2004-ansible   latest    076453efe62b   5 days ago    959MB
+hello-world                             latest    feb5d9fea6a5   7 weeks ago   13.3kB
+
+
+# View Docker Containers:
+$ docker container list
+CONTAINER ID   IMAGE                                   COMMAND                  CREATED         STATUS         PORTS     NAMES
+19dd09732a1f   geerlingguy/docker-ubuntu2004-ansible   "/lib/systemd/systemd"   2 minutes ago   Up 2 minutes             ubuntu
+869250d389cc   geerlingguy/docker-centos8-ansible      "/usr/lib/systemd/sy…"   2 minutes ago   Up 2 minutes             centos
+
+
+-NOTE-
+systemd is in use.
+
+
+----------------------------------
+
+# Clear out env
+$ mol destroy
+...
+
+$ docker container list
+CONTAINER ID   IMAGE     COMMAND   CREATED   STATUS    PORTS     NAMES
+
+
+----------------------------------
+
+## python-venv/molecule/roles/mywebapp/tasks/main.yml
+---
+# tasks file for mywebapp
+
+- name: Install Apache Server
+  package:
+    name: httpd
+    state: present
+
+- name: Web content
+  copy:
+    dest: /var/www/html/index.html
+    content: This is web content
+
+- name: Start the Apache service
+  service:
+    name: httpd
+    state: started
+    enable: true
+...
+
+----------------------------------
+
+$ mol list
+INFO     Running default > list
+                ╷             ╷                  ╷               ╷         ╷
+  Instance Name │ Driver Name │ Provisioner Name │ Scenario Name │ Created │ Converged
+╶───────────────┼─────────────┼──────────────────┼───────────────┼─────────┼───────────╴
+  centos        │ docker      │ ansible          │ default       │ false   │ false
+  ubuntu        │ docker      │ ansible          │ default       │ false   │ false
+
+# Even with Create=false, the containers were already created previously (mol create), so:
+# We only need to do 'mol converge'
+# (converge: Use the provisioner to configure instances (dependency, create, prepare converge))
+
+
+# Error: 
+TASK [mywebapp : Install Apache Server] ****************************************
+fatal: [ubuntu]: FAILED! => {"changed": false, "msg": "No package matching 'httpd' is available"}
+
+# because ubuntu package not referenced in tasks/main.yml
+
+
+----------------------------------
+
+# Create variable files:
+vars/RedHat.yml
+---
+web: httpd
+
+
+vars/Debian.yml
+---
+web: apache2
+
+# ^^ filenames have to match 'ansible_os_family' fact in Ansible.
+
+----------------------------------
+
+# update: tasks/main.yml to include variable file:
+
+---
+# tasks file for mywebapp
+
+- name: Read variable files													# add
+  include_vars: "{{ ansible_os_family }}.yml"				# add
+
+- name: Install Apache Server
+  package:
+    name: "{{ web }}"																# Change
+    state: present
+
+- name: Web content
+  copy:
+    dest: /var/www/html/index.html
+    content: This is web content
+
+- name: Start the Apache service
+  service:
+    name: "{{ web }}"																# Change
+    state: started
+    enable: true
+...
+
+----------------------------------
+
+## Add: Update Ubuntu Cache
+
+---
+# tasks file for mywebapp
+
+- name: Read variable files
+  include_vars: "{{ ansible_os_family }}.yml"
+
+- name: Update Ubuntu cache													# Add
+  apt:
+    update_cache: true
+    cache_valid_time: 86400
+  when: ansible_os_family == 'Debian'
+
+- name: Install Apache Server
+  package:
+    name: "{{ web }}"
+    state: present
+
+- name: Web content
+  copy:
+    dest: /var/www/html/index.html
+    content: This is web content
+
+- name: Start the Apache service
+  service:
+    name: "{{ web }}"
+    state: started
+    enabled: true
+...
+
+
+----------------------------------
+
+$ mol converge
+...
+PLAY RECAP *****
+centos                     : ok=5    changed=0    unreachable=0    failed=0    skipped=1    rescued=0    ignored=0
+ubuntu                     : ok=6    changed=4    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+
+----------------------------------
+
+$ docker ps --all
+CONTAINER ID   IMAGE                                   COMMAND                  CREATED          STATUS                   PORTS     NAMES
+c0880c7301bd   geerlingguy/docker-ubuntu2004-ansible   "/lib/systemd/systemd"   15 minutes ago   Up 15 minutes                      ubuntu
+37e2c525af26   geerlingguy/docker-centos8-ansible      "/usr/lib/systemd/sy…"   15 minutes ago   Up 15 minutes                      centos
+
+
+----------------------------------
+
+# Login to centos container:
+
+mol login -h centos
+INFO     Running default > login
+[root@centos /]#
+[root@centos /]# curl http://localhost
+This is web content
+
+
+
+----------------------------------
+
+## Add test: molecule/default/verify.yml
+
+molecule/default/verify.yml
+---
+- name: Verify
+  hosts: all
+  gather_facts: false
+  vars:																		# Added
+    expected_content: web content					# Added
+  tasks:
+  - name: Example assertion
+    assert:
+      that: true
+
+  - name: Test HTTP												# Added
+    uri:
+      url: http://localhost
+      return_content: true
+    register: HTTP_output
+    failed_when: "expected_content not in HTTP_output.content"
+...
+
+
+----------------------------------
+
+# Run test:
+
+$ mol verify
+...
+
+PLAY [Verify] ******************************************************************
+
+TASK [Example assertion] *******************************************************
+ok: [centos] => {
+    "changed": false,
+    "msg": "All assertions passed"
+}
+ok: [ubuntu] => {
+    "changed": false,
+    "msg": "All assertions passed"
+}
+
+TASK [Test HTTP] ***************************************************************
+ok: [ubuntu]
+ok: [centos]
+
+PLAY RECAP *********************************************************************
+centos                     : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+ubuntu                     : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+
+INFO     Verifier completed successfully.
+
+----------------------------------
+
+# Test env from scratch:
+
+mol destroy
+mol test
+
+# test: Test (dependency, lint, cleanup, destroy, syntax, create, prepare, converge, idempotence, side_effect, verify, cleanup, destroy).
+# This will leave the env in a 'destroyed' state.
+
+----------------------------------
+
+# To rebuild:
+mol converge
+
+----------------------------------
