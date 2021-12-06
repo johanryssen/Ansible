@@ -1,0 +1,17 @@
+snap install semaphore
+
+snap stop semaphore
+
+semaphore user add --admin --name "jo" --login jo --email imfene@gmail.com --password jo
+
+snap start semaphore
+
+http://localhost:3000
+
+
+# Set new port:
+snap set semaphore port=4444
+snap restart semaphore
+
+
+
